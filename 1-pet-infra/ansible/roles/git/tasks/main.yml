@@ -1,0 +1,13 @@
+# Tasks for Git Operations
+
+- name: Ensure git Package is Installed
+  apt:
+    name: git
+    update_cache: yes
+    state: present
+
+- name: Perform Git Checkout
+  git:
+    repo: "{{ repo_url }}/{{ repo_name }}.git"
+    version: "{{ git_branch }}"
+    dest: "{{ repo_dir }}"

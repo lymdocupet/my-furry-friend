@@ -1,0 +1,29 @@
+- name: Install Apache2 Package
+  apt:
+    name: apache2
+    state: present
+    update_cache: yes
+  tags: [packages]
+
+- name: Create Root Directory for Specified Domain
+  file:
+    path: "/var/www/{{ web_host }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Configure Virtual Host Settings
+  template:
+    src: "apache-template.conf.j2"
+    dest: "/etc/apache2/sites-available/{{ web_host }}.conf"
+
+- name: Activate Apache Site Configuration
+  command: a2ensite {{ web_host }}.conf
+  notify: restart apache
+
+- name: Allow Inbound HTTP Traffic on Port {{ web_port }}"
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ web_port }}"

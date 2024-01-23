@@ -1,0 +1,49 @@
+---
+# tasks for php
+- name: Ensure PHP and Dependencies are Installed
+  apt:
+     name: "{{ item }}"
+     state: present
+     update_cache: yes
+  loop:
+   - php
+   - php-mysql
+
+- name: Check Existence of SQL Script File
+  stat: 
+    path: "{{ script_file }}"
+  register: check_file
+
+
+- name: Import Data into Database from SQL Script
+  mysql_db:
+    name: "{{ db_name }}"
+    state: import
+    target: "{{ script_file }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: "{{ db_host }}"
+  when: check_file.stat.exists
+
+- name: Copy all files to /var/www/{{ web_host }}
+  shell: cp -r {{ repo_dir }}/* /var/www/{{ web_host }}
+
+- name: Delete Default Connection Files from /var/www/{{ web_host }}
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/var/www/{{ web_host }}/include/config.php"
+    - "/var/www/{{ web_host }}/admin/include/config.php"
+
+
+- name: Copy database connection files to /var/www/{{ web_host }}
+  template:
+    src: "config.php.j2"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  loop:
+   - { dest: "/var/www/{{ web_host }}/include/config.php"}
+   - { dest: "/var/www/{{ web_host }}/admin/include/config.php"}
+
+...
